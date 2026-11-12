@@ -1,9 +1,6 @@
 /* Enhanced recipe cards v1.5. External photographs are illustrative, not exact plated recipes.
    Non-photographed recipes use illustrated emoji tiles; no fabricated photos. */
-const foodPhotos={
-'Рис с курицей':{url:'https://images.unsplash.com/photo-1605704931020-ba62cdb2ba9b?w=900',by:'Фото: Karolina Kołodziejczak / Unsplash · иллюстрация похожего блюда',source:'https://nutrioscore.com/photo/popular/'},
-'Рис с овощами':{url:'https://images.unsplash.com/photo-1615865417491-9941019fbc00?w=900',by:'Фото: Shashi Chaturvedula / Unsplash · иллюстрация похожего блюда',source:'https://nutrioscore.com/photo/popular/'}
-};
+const foodPhotos={}; // Фотографии подбираются с указанием открытой лицензии в recipe-timeline.js.
 const refinedRecipes={
 'Рис с курицей':{
  note:'Рис взвешивай сухим, курицу — до приготовления. Лук можно исключить.',
