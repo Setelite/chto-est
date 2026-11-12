@@ -135,4 +135,4 @@ $('#clear').onclick=()=>{have=[];save();chips();render()};$('#find').onclick=()=
 $('#copyShop').onclick=async()=>{let text=shop.filter(i=>!i.done).map(i=>'• '+i.name).join('\n')||'Список пуст';try{await navigator.clipboard.writeText(text);$('#copyShop').textContent='✓ Скопировано'}catch{alert(text)}};
 function changeTab(id){document.querySelectorAll('main>section').forEach(s=>s.hidden=s.id!==id);document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===id));window.scrollTo({top:0,behavior:'smooth'})}
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>changeTab(b.dataset.tab));chips();render();if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
-</script><script src="./quantities.js"></script><script src="./weekly.js"></script></body></html>
+</script><script src="./quantities.js"></script><script src="./weekly.js"></script><script src="./recipe-cards.js"></script></body></html>
