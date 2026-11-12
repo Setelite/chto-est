@@ -45,12 +45,12 @@ async function fetchCommonsPhoto(r){
      const score=x=>{let title=x.title.toLowerCase();return words.reduce((n,w)=>n+(title.includes(w)?2:0),0)};
      return score(b)-score(a);
    });
-   const best=choices.find(x=>words.some(w=>x.title.toLowerCase().includes(w)));
+   const best=choices.find(x=>{const title=x.title.toLowerCase();const hits=words.filter(w=>title.includes(w)).length;return hits>=Math.min(words.length,words.length>1?2:1)})
    if(!best){photoBlocked.add(r.id);return null}
    const info=best.imageinfo[0],meta=info.extmetadata||{};
    const license=photoSafe(meta.LicenseShortName?.value||meta.UsageTerms?.value||'');
    // Ограничение автоматически выбираемой лицензии: разрешаем только CC и Public Domain.
-   if(!/^(CC|Public|PD-|PDM|CC0)/i.test(license)){photoBlocked.add(r.id);return null}
+   if(/NC|ND|noncommercial|no derivatives/i.test(license)||!/^(CC BY(?:-SA)?(?: |-|$)|CC0|Public|PD-|PDM)/i.test(license)){photoBlocked.add(r.id);return null}
    const photo={url:info.thumburl||info.url,source:info.descriptionurl||'https://commons.wikimedia.org/',author:photoSafe(meta.Artist?.value)||'Автор указан на Wikimedia Commons',license,licenseUrl:String(meta.LicenseUrl?.value||''),label:best.title.replace(/^File:/,'')};
    photoMemory.set(r.id,photo);return photo
   }catch(e){photoBlocked.add(r.id);return null}
