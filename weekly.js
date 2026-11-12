@@ -1,7 +1,8 @@
 /* ЧТО ЕСТЬ? — меню на 7 дней, поиск по рецептам и общая корзина.
    Количества ориентировочные, не подтверждены технологическими картами. */
 const cheDays=['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота','Воскресенье'];
-let cheWeek=load('week',[]);
+let cheWeek=load('week',[]);let cheAddedSignature=load('week_added_signature','');
+const cheSignature=()=>cheWeek.join('-')+'|'+chePortions()+'|'+[...cheStock()].sort().join(',');
 const cheSaveWeek=()=>localStorage.setItem('che_week',JSON.stringify(cheWeek));
 const chePortions=()=>Number(document.querySelector('#portions').value)||2;
 const cheNeeds=r=>{const opt=optionalByName[r.name]||[];return r.need.filter(n=>!opt.includes(n))};
@@ -24,7 +25,7 @@ function chePlan(){
    if(!scored.length)break;
    const pick=scored[0].r;chosen.push(pick.id);lastKey=pick.need[0];
  }
- cheWeek=chosen;cheSaveWeek();cheRenderWeek();
+ cheWeek=chosen;cheAddedSignature='';cheSaveWeek();cheRenderWeek();
 }
 function cheWeekMissing(){
  const stock=cheStock(),qty=new Map();
@@ -44,18 +45,19 @@ function cheRenderWeek(){
  return '<article class="recipe"><div class="rtop"><div class="emoji">'+r.emoji+'</div><div style="flex:1;min-width:0"><div class="eyebrow">'+cheDays[day]+'</div><h3 class="rtitle">'+esc(r.name)+'</h3><div class="meta">'+r.min+' мин · '+chePortions()+' порц.</div><span class="pill '+(missing.length?'missing':'')+'">'+(missing.length?'Докупить '+missing.length+' ингредиент(а)':'Ингредиенты есть')+'</span></div></div><div class="rbuttons"><button class="outline" data-open="'+id+'">Рецепт →</button><button class="fav" data-weekreplace="'+day+'" title="Заменить блюдо">↻</button></div></article>'
  }).join('');
  const missing=cheWeekMissing();
- target.innerHTML+='<div class="panel" style="margin-top:14px"><h2 style="margin-top:0">Общая корзина на неделю</h2><p class="hint">Суммируются основные ингредиенты, которых нет в отмеченных продуктах. Запасы в граммах не учитываются.</p>'+(missing.length?'<ul>'+missing.map(i=>'<li>'+esc(i.name)+' — '+esc(qFmt(i.qty,i.unit))+'</li>').join('')+'</ul>':'<p>Все основные продукты отмечены как имеющиеся дома.</p>')+'<button class="primary" id="weekAddShop">Добавить в покупки</button><button class="ghost" id="weekCopy" style="width:100%;margin-top:8px">Скопировать меню</button></div>';
+ target.innerHTML+='<div class="panel" style="margin-top:14px"><h2 style="margin-top:0">Общая корзина на неделю</h2><p class="hint">Суммируются основные ингредиенты, которых нет в отмеченных продуктах. Запасы в граммах не учитываются.</p>'+(missing.length?'<ul>'+missing.map(i=>'<li>'+esc(i.name)+' — '+esc(qFmt(i.qty,i.unit))+'</li>').join('')+'</ul>':'<p>Все основные продукты отмечены как имеющиеся дома.</p>')+'<button class="primary" id="weekAddShop" '+(cheAddedSignature===cheSignature()?'disabled style="opacity:.55"':'')+'>'+(cheAddedSignature===cheSignature()?'✓ Список уже добавлен':'Добавить в покупки')+'</button><button class="ghost" id="weekCopy" style="width:100%;margin-top:8px">Скопировать меню</button></div>';
 }
 function cheReplaceDay(day){
  const veg=document.querySelector('#vegetarian').checked,already=new Set(cheWeek);
  const candidates=recipes.filter(r=>(!veg||r.veg)&&!already.has(r.id));
  if(!candidates.length)return;
  let r=candidates.map(r=>({r,missing:cheNeeds(r).filter(x=>!cheStock().has(x)).length})).sort((a,b)=>a.missing-b.missing||a.r.min-b.r.min)[0].r;
- cheWeek[day]=r.id;cheSaveWeek();cheRenderWeek();
+ cheWeek[day]=r.id;cheAddedSignature='';cheSaveWeek();cheRenderWeek();
 }
 function cheAddShop(){
+ if(cheAddedSignature===cheSignature())return;
  const missing=cheWeekMissing();for(const item of missing)addMeasured(item.name,{qty:item.qty,unit:item.unit});
- save();render();changeTab('shop');
+ cheAddedSignature=cheSignature();localStorage.setItem('che_week_added_signature',JSON.stringify(cheAddedSignature));save();render();changeTab('shop');
 }
 function cheCopyWeek(){
  return cheWeek.map((id,i)=>cheDays[i]+': '+recipes[id].name).join('\n')+'\n\nДокупить:\n'+cheWeekMissing().map(x=>'• '+x.name+' — '+qFmt(x.qty,x.unit)).join('\n');
