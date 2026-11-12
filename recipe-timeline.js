@@ -33,7 +33,7 @@ async function fetchCommonsPhoto(r){
  const query=photoQuery(r);
  const task=(async()=>{
   try{
-   const p=new URLSearchParams({action:'query',generator:'search',gsrsearch:query+' food',gsrnamespace:'6',gsrlimit:'6',prop:'imageinfo',iiprop:'url|extmetadata|mime',iiextmetadatafilter:'LicenseShortName|Artist|UsageTerms|AttributionRequired',iiurlwidth:'700',format:'json',origin:'*'});
+   const p=new URLSearchParams({action:'query',generator:'search',gsrsearch:query+' food',gsrnamespace:'6',gsrlimit:'6',prop:'imageinfo',iiprop:'url|extmetadata|mime',iiextmetadatafilter:'LicenseShortName|LicenseUrl|Artist|UsageTerms|AttributionRequired',iiurlwidth:'700',format:'json',origin:'*'});
    const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),7000);
    let res;try{res=await fetch('https://commons.wikimedia.org/w/api.php?'+p,{signal:controller.signal,credentials:'omit'})}finally{clearTimeout(timeout)}
    if(!res.ok)throw Error('Photo API: '+res.status);
@@ -51,7 +51,7 @@ async function fetchCommonsPhoto(r){
    const license=photoSafe(meta.LicenseShortName?.value||meta.UsageTerms?.value||'');
    // Ограничение автоматически выбираемой лицензии: разрешаем только CC и Public Domain.
    if(!/^(CC|Public|PD-|PDM|CC0)/i.test(license)){photoBlocked.add(r.id);return null}
-   const photo={url:info.thumburl||info.url,source:info.descriptionurl||'https://commons.wikimedia.org/',author:photoSafe(meta.Artist?.value)||'Автор указан на Wikimedia Commons',license,label:best.title.replace(/^File:/,'')};
+   const photo={url:info.thumburl||info.url,source:info.descriptionurl||'https://commons.wikimedia.org/',author:photoSafe(meta.Artist?.value)||'Автор указан на Wikimedia Commons',license,licenseUrl:String(meta.LicenseUrl?.value||''),label:best.title.replace(/^File:/,'')};
    photoMemory.set(r.id,photo);return photo
   }catch(e){photoBlocked.add(r.id);return null}
  })();
@@ -75,7 +75,7 @@ function loadPhotoElement(node){
   img.loading='lazy';img.decoding='async';img.alt='Фото похожего блюда из Wikimedia Commons — '+r.name;
   img.referrerPolicy='no-referrer';
   img.onerror=()=>{img.remove();node.classList.remove('photo');node.querySelector('.dish-photo-credit').hidden=true};
-  img.onload=()=>{node.classList.add('photo');const emoji=node.querySelector('span');if(emoji)emoji.style.display='none';const c=node.querySelector('.dish-photo-credit');if(c){c.hidden=false;c.innerHTML='<a href="'+p.source+'" target="_blank" rel="noopener noreferrer">Wikimedia Commons · '+p.license+'</a>';}};
+  img.onload=()=>{node.classList.add('photo');const emoji=node.querySelector('span');if(emoji)emoji.style.display='none';const c=node.querySelector('.dish-photo-credit');if(c){c.hidden=false;const a=document.createElement('a');a.href=p.source;a.target='_blank';a.rel='noopener noreferrer';a.textContent=(p.author+' · '+p.license).slice(0,90);a.title='Автор, лицензия и исходный файл на Wikimedia Commons';c.replaceChildren(a);}};
   img.src=p.url;node.prepend(img)
  });
 }
